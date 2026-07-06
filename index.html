@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>مستودع مواد الصيانة - OAN</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section class="login-screen" id="loginScreen">
+      <form class="login-card" id="loginForm">
+        <img src="assets/oan-logo.png" alt="OAN" class="login-logo" />
+        <h1 data-i18n="loginTitle">تسجيل الدخول</h1>
+        <label><span data-i18n="username">اسم المستخدم</span><input id="loginUsername" autocomplete="username" required /></label>
+        <label><span data-i18n="password">كلمة المرور</span><input id="loginPassword" type="password" autocomplete="current-password" required /></label>
+        <button class="primary-button" type="submit" data-i18n="login">دخول</button>
+        <p class="login-error" id="loginError"></p>
+      </form>
+    </section>
+    <div class="app-shell auth-locked" id="appShell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="assets/oan-logo.png" alt="OAN" class="brand-logo" />
+          <div>
+            <h1 data-i18n="appName">مستودع مواد الصيانة</h1>
+            <p data-i18n="projectName">تشغيل وصيانة قصر العزيزية - الرياض</p>
+            <p data-i18n="companyName">شركة أو إيه إن - قسم الصيانة</p>
+          </div>
+        </div>
+        <nav class="nav-tabs" aria-label="أقسام التطبيق">
+          <button class="nav-tab active" data-view="dashboard" title="Dashboard"><span class="ico">⌂</span><span data-i18n="navDashboard">المتابعة</span></button>
+          <button class="nav-tab" data-view="items" title="Items"><span class="ico">▦</span><span data-i18n="navItems">المواد</span></button>
+          <button class="nav-tab" data-view="materialRequests" title="Materials Request"><span class="ico">▣</span><span data-i18n="navRequests">طلبات المواد</span></button>
+          <button class="nav-tab" data-view="reports" title="Reports"><span class="ico">▤</span><span data-i18n="navReports">التقارير</span></button>
+          <button class="nav-tab" data-view="settings" title="Settings"><span class="ico">⚙</span><span data-i18n="navSettings">التعريفات</span></button>
+        </nav>
+      </aside>
+      <main class="workspace">
+        <header class="topbar">
+          <div class="title-block">
+            <img src="assets/oan-logo.png" alt="OAN" class="report-logo" />
+            <div>
+              <h2 id="viewTitle">المتابعة</h2>
+              <p id="viewSubtitle">ملخص حركة مستودع مواد الصيانة والتنبيهات المهمة.</p>
+            </div>
+          </div>
+          <div class="top-actions">
+            <span class="app-clock" id="appClock"></span>
+            <span class="user-badge" id="currentUserBadge"></span>
+            <button class="ghost-button" id="languageBtn" title="Language">EN</button>
+            <button class="ghost-button" id="exportJsonBtn" title="Backup">⇩ <span data-i18n="backup">نسخة احتياطية</span></button>
+            <label class="ghost-button file-button" title="Restore">
+              ⇧ <span data-i18n="restore">استرجاع</span>
+              <input type="file" id="importJsonInput" accept="application/json" />
+            </label>
+            <button class="ghost-button" id="logoutBtn" title="Logout"><span data-i18n="logout">خروج</span></button>
+            <button class="primary-button" id="quickIssueBtn" title="Purchase request">＋ <span data-i18n="issueMaterials">طلب شراء مواد / قطع غيار</span></button>
+          </div>
+        </header>
+        <section class="view active" id="dashboard">
+          <div class="metric-grid">
+            <article class="metric"><span data-i18n="metricItems">إجمالي المواد</span><strong id="metricItems">0</strong></article>
+            <article class="metric metric-with-select"><span data-i18n="metricStock">إجمالي الرصيد</span><select id="dashboardStockDepartment"></select><strong id="metricStock">0</strong></article>
+            <article class="metric"><span data-i18n="metricLow">تحت حد الطلب</span><strong id="metricLow">0</strong></article>
+            <article class="metric"><span data-i18n="metricMonth">حركات الشهر</span><strong id="metricMonth">0</strong></article>
+          </div>
+          <section class="panel alerts-panel">
+            <div class="panel-head">
+              <h3 data-i18n="requestAlerts">تنبيهات الطلبات والتكرار</h3>
+            </div>
+            <div class="activity-list" id="requestAlerts"></div>
+          </section>
+          <div class="split-layout">
+            <section class="panel">
+              <div class="panel-head">
+                <h3 data-i18n="lowStock">مواد وقطع غيار القسم المختار</h3>
+                <button class="icon-button" id="printAlertsBtn" title="Print">⎙</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th data-i18n="code">الكود</th><th data-i18n="item">المادة</th><th data-i18n="stock">الرصيد</th><th data-i18n="minQty">الحد الأدنى</th><th data-i18n="department">القسم</th></tr></thead>
+                  <tbody id="lowStockBody"></tbody>
+                </table>
+              </div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <h3 data-i18n="recent">آخر الحركات</h3>
+                <button class="icon-button" id="addTransactionBtn" title="Add">＋</button>
+              </div>
+              <div class="activity-list" id="recentTransactions"></div>
+            </section>
+          </div>
+        </section>
+        <section class="view" id="items">
+          <div class="toolbar">
+            <div class="search-box">⌕<input id="itemSearch" data-i18n-placeholder="searchItems" placeholder="بحث بالكود أو الاسم أو القسم أو الموقع" /></div>
+            <button class="primary-button" id="addItemBtn">＋ <span data-i18n="newItem">مادة جديدة</span></button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th data-i18n="code">الكود</th><th data-i18n="itemAr">الاسم العربي</th><th data-i18n="itemEn">الاسم الإنجليزي</th><th data-i18n="category">التصنيف</th><th data-i18n="department">القسم</th><th data-i18n="unit">الوحدة</th><th data-i18n="location">الموقع</th><th data-i18n="stock">الرصيد</th><th></th></tr>
+              </thead>
+              <tbody id="itemsBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="view" id="transactions">
+          <div class="toolbar">
+            <div class="search-box">⌕<input id="transactionSearch" data-i18n-placeholder="searchTransactions" placeholder="بحث في الحركات" /></div>
+            <button class="primary-button" id="newTransactionBtn">＋ <span data-i18n="newTransaction">طلب شراء مواد / قطع غيار</span></button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th data-i18n="date">التاريخ</th><th data-i18n="item">المادة</th><th data-i18n="type">النوع</th><th data-i18n="qty">الكمية</th><th data-i18n="requestNo">رقم الطلب</th><th data-i18n="department">القسم</th><th data-i18n="building">المبنى</th><th></th></tr>
+              </thead>
+              <tbody id="transactionsBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="view" id="materialRequests">
+          <div class="toolbar">
+            <div class="search-box">⌕<input id="requestSearch" data-i18n-placeholder="searchRequests" placeholder="بحث برقم الطلب أو المبنى أو الوصف أو القسم" /></div>
+            <input id="requestOrderSearch" data-i18n-placeholder="searchOrderNo" placeholder="رقم أمر الصيانة" />
+            <input id="requestStoreSearch" data-i18n-placeholder="searchStoreNo" placeholder="رقم طلب المستودع" />
+            <input id="requestBuildingSearch" data-i18n-placeholder="searchBuildingNo" placeholder="رقم المبنى" />
+          </div>
+          <div class="request-layout">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th data-i18n="reqSerial">Req. SN</th>
+                    <th data-i18n="date">التاريخ</th>
+                    <th data-i18n="site">الموقع</th>
+                    <th data-i18n="building">المبنى</th>
+                    <th data-i18n="itemsCount">البنود</th>
+                    <th data-i18n="urgent">عاجل</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="materialRequestsBody"></tbody>
+              </table>
+            </div>
+            <aside class="panel request-preview-panel">
+              <div class="panel-head">
+                <h3 data-i18n="requestPreview">معاينة الطلب</h3>
+                <div class="row-actions">
+                  <button class="icon-button" id="printMaterialRequestBtn" title="Print">⎙</button>
+                  <button class="icon-button" id="exportMaterialRequestExcelBtn" title="Excel">X</button>
+                </div>
+              </div>
+              <div id="materialRequestPreview" class="request-paper"></div>
+            </aside>
+          </div>
+        </section>
+        <section class="view" id="reports">
+          <div class="report-actions">
+            <select id="reportTypeFilter">
+              <option value="stock" data-i18n="reportStock">تقرير المخزون</option>
+              <option value="departments" data-i18n="reportDepartments">تقرير الأقسام</option>
+              <option value="building" data-i18n="reportBuilding">تقرير المباني</option>
+              <option value="storeProvided" data-i18n="reportStoreProvided">مواد تم توفيرها من المستودع</option>
+              <option value="purchased" data-i18n="reportPurchased">مواد تم شراؤها</option>
+              <option value="notPurchased" data-i18n="reportNotPurchased">مواد لم يتم شراؤها</option>
+              <option value="incompletePurchase" data-i18n="reportIncompletePurchase">مواد لم يكتمل شراؤها</option>
+            </select>
+            <select id="reportBuildingFilter"></select>
+            <select id="reportDepartmentFilter"></select>
+            <label class="date-filter"><span data-i18n="dateFromHint">من يوم-شهر-سنة</span><input id="reportFromDate" type="date" /></label>
+            <label class="date-filter"><span data-i18n="dateToHint">إلى يوم-شهر-سنة</span><input id="reportToDate" type="date" /></label>
+            <button class="ghost-button" id="newReportBtn" type="button">＋ <span data-i18n="newReport">تقرير جديد</span></button>
+            <button class="ghost-button" id="exportStockExcelBtn">⇩ <span data-i18n="exportStockExcel">تصدير الرصيد Excel</span></button>
+            <button class="ghost-button" id="exportTransExcelBtn">⇩ <span data-i18n="exportTransExcel">تصدير الحركات Excel</span></button>
+            <button class="ghost-button" id="printReportBtn">⎙ <span data-i18n="printReport">طباعة التقرير</span></button>
+          </div>
+          <div class="report-heading" id="stockReportHeading"></div>
+          <div class="table-wrap report-table">
+            <table id="stockReportTable">
+              <thead><tr><th data-i18n="code">الكود</th><th data-i18n="itemAr">الاسم العربي</th><th data-i18n="itemEn">الاسم الإنجليزي</th><th data-i18n="category">التصنيف</th><th data-i18n="department">القسم</th><th data-i18n="unit">الوحدة</th><th data-i18n="stock">الرصيد</th><th data-i18n="minQty">الحد الأدنى</th></tr></thead>
+              <tbody id="stockReportBody"></tbody>
+            </table>
+          </div>
+          <div class="report-summary" id="reportSummary"></div>
+        </section>
+        <section class="view" id="settings">
+          <div class="report-actions settings-actions">
+            <div class="search-box">⌕<input id="settingsSearch" data-i18n-placeholder="searchSettings" placeholder="بحث في كل التعريفات" /></div>
+            <label class="ghost-button file-button">
+              ⇧ <span data-i18n="importBuildings">استيراد المباني من Excel/CSV</span>
+              <input type="file" id="importBuildingsInput" accept=".csv,.tsv,.txt,.xls,.html" />
+            </label>
+            <button class="ghost-button" id="downloadBuildingsTemplateBtn">⇩ <span data-i18n="buildingTemplate">نموذج المباني</span></button>
+          </div>
+          <div class="settings-grid">
+            <section class="panel"><div class="panel-head"><h3 data-i18n="categories">التصنيفات</h3><button class="icon-button" data-master="categories" title="Add">＋</button></div><div class="chips" id="categoriesList"></div></section>
+            <section class="panel"><div class="panel-head"><h3 data-i18n="departments">الأقسام</h3><button class="icon-button" data-master="departments" title="Add">＋</button></div><div class="chips" id="departmentsList"></div></section>
+            <section class="panel"><div class="panel-head"><h3 data-i18n="units">الوحدات</h3><button class="icon-button" data-master="units" title="Add">＋</button></div><div class="chips" id="unitsList"></div></section>
+            <section class="panel"><div class="panel-head"><h3 data-i18n="locations">المواقع</h3><button class="icon-button" data-master="locations" title="Add">＋</button></div><div class="chips" id="locationsList"></div></section>
+            <section class="panel buildings-panel">
+              <div class="panel-head"><h3 data-i18n="buildings">المباني المستفيدة</h3><button class="icon-button" data-master="buildings" title="Add">＋</button></div>
+              <div class="panel-tools"><div class="search-box">⌕<input id="buildingSearch" data-i18n-placeholder="searchBuildings" placeholder="بحث برقم المبنى أو اسم المبنى" /></div></div>
+              <div class="table-wrap compact-table">
+                <table>
+                  <thead><tr><th data-i18n="buildingNo">رقم المبنى</th><th data-i18n="building">المبنى</th><th></th></tr></thead>
+                  <tbody id="buildingsBody"></tbody>
+                </table>
+              </div>
+            </section>
+            <div class="settings-stack">
+              <section class="panel technicians-panel"><div class="panel-head"><h3 data-i18n="technicians">الفنيون</h3><button class="icon-button" data-master="technicians" title="Add">＋</button></div><div class="chips" id="techniciansList"></div></section>
+              <section class="panel transaction-types-panel"><div class="panel-head"><h3 data-i18n="transactionTypes">أنواع الحركة</h3><button class="icon-button" data-master="transactionTypes" title="Add">＋</button></div><div class="chips" id="transactionTypesList"></div></section>
+              <section class="panel users-panel" id="usersPanel"><div class="panel-head"><h3 data-i18n="users">المستخدمون</h3><button class="icon-button" id="addUserBtn" title="Add">＋</button></div><div class="chips" id="usersList"></div></section>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <dialog id="itemDialog">
+      <form method="dialog" class="dialog-form" id="itemForm">
+        <h3 id="itemDialogTitle">مادة جديدة</h3>
+        <input type="hidden" id="itemId" />
+        <div class="form-grid">
+          <label><span data-i18n="code">الكود</span><input id="itemCode" required maxlength="30" /></label>
+          <label><span data-i18n="itemAr">الاسم العربي</span><input id="itemNameAr" required maxlength="120" /></label>
+          <label><span data-i18n="itemEn">الاسم الإنجليزي</span><input id="itemNameEn" maxlength="120" /></label>
+          <label><span data-i18n="category">التصنيف</span><select id="itemCategory" required></select></label>
+          <label><span data-i18n="department">القسم</span><select id="itemDepartment" required></select></label>
+          <label><span data-i18n="unit">الوحدة</span><select id="itemUnit" required></select></label>
+          <label><span data-i18n="location">الموقع</span><select id="itemLocation" required></select></label>
+          <label><span data-i18n="stock">الرصيد</span><input id="itemStock" type="number" min="0" step="1" value="0" /></label>
+          <label><span data-i18n="minQty">الحد الأدنى</span><input id="itemMinQty" type="number" min="0" step="1" value="0" /></label>
+          <label><span data-i18n="notes">ملاحظات</span><input id="itemNotes" maxlength="200" /></label>
+        </div>
+        <div class="dialog-actions">
+          <button class="ghost-button" value="cancel" type="button" data-close data-i18n="cancel">إلغاء</button>
+          <button class="primary-button" value="default" data-i18n="save">حفظ</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="transactionDialog">
+      <form method="dialog" class="dialog-form" id="transactionForm">
+        <h3 id="transactionDialogTitle">حركة جديدة</h3>
+        <p class="dialog-hint" data-i18n="purchaseHint">اختر القسم أولاً لعرض المواد وقطع الغيار والفنيين التابعين له. قائمة المباني كاملة ومتاحة للاختيار.</p>
+        <input type="hidden" id="transactionId" />
+        <div class="form-grid">
+          <label class="purchase-field"><span data-i18n="date">التاريخ</span><input id="transactionDate" type="date" required /></label>
+          <label><span data-i18n="item">المادة</span><select id="transactionItem"></select></label>
+          <label class="wide-field"><span data-i18n="newMaterialName">مادة غير موجودة</span><input id="transactionNewItemName" list="transactionNewItemSuggestions" maxlength="160" data-i18n-placeholder="newMaterialNamePlaceholder" placeholder="اكتب اسم المادة أو قطعة الغيار لإضافتها تلقائياً" /><datalist id="transactionNewItemSuggestions"></datalist></label>
+          <label class="purchase-field"><span data-i18n="type">نوع الحركة</span><select id="transactionType" required></select></label>
+          <label><span data-i18n="qty">الكمية</span><input id="transactionQty" type="number" min="1" step="1" required /></label>
+          <label class="purchase-field"><span data-i18n="department">القسم</span><select id="transactionDepartment" required></select></label>
+          <label class="purchase-field"><span data-i18n="requestedBy">الفني</span><select id="transactionRequestedBy"></select></label>
+          <label><span data-i18n="requestNo">رقم الطلب</span><input id="transactionRequestNo" maxlength="60" /></label>
+          <div class="purchase-check-row">
+            <label class="check-option"><input id="transactionStoreProvided" type="checkbox" /><span data-i18n="storeProvidedCheck">تم توفيرها من المستودع</span></label>
+            <label class="check-option"><input id="transactionUrgentVip" type="checkbox" /><span data-i18n="urgentVip">عاجل VIP</span></label>
+            <label class="check-option"><input id="transactionRaisePurchase" type="checkbox" /><span data-i18n="raisePurchase">الرفع للشراء</span></label>
+            <label class="check-option"><input id="transactionPurchasedActual" type="checkbox" /><span data-i18n="purchasedActual">تم الشراء فعلياً</span></label>
+          </div>
+          <label class="notes-field"><span data-i18n="notes">ملاحظات</span><input id="transactionRemarks" maxlength="200" /></label>
+          <label class="building-field"><span data-i18n="building">المبنى المستفيد</span><select id="transactionBuilding"></select></label>
+        </div>
+        <div class="dialog-actions">
+          <button class="ghost-button" value="cancel" type="button" data-close data-i18n="cancel">إلغاء</button>
+          <button class="primary-button" value="default" data-i18n="save">حفظ</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="masterDialog">
+      <form method="dialog" class="dialog-form" id="masterForm">
+        <h3 id="masterDialogTitle">إضافة تعريف</h3>
+        <input type="hidden" id="masterKind" />
+        <input type="hidden" id="masterId" />
+        <div class="form-grid compact">
+          <label><span data-i18n="code">الكود</span><input id="masterCode" required maxlength="30" /></label>
+          <label><span data-i18n="nameAr">الاسم العربي</span><input id="masterNameAr" required maxlength="120" /></label>
+          <label><span data-i18n="nameEn">الاسم الإنجليزي</span><input id="masterNameEn" maxlength="120" /></label>
+          <label id="masterDepartmentLabel"><span data-i18n="department">القسم</span><select id="masterDepartment"></select></label>
+          <label id="buildingNumberLabel"><span data-i18n="buildingNo">رقم المبنى</span><input id="masterBuildingNo" maxlength="30" /></label>
+          <label id="effectLabel"><span data-i18n="effect">الأثر على الرصيد</span><input id="masterEffect" type="number" min="-1" max="1" step="1" value="1" /></label>
+        </div>
+        <div class="dialog-actions">
+          <button class="ghost-button" value="cancel" type="button" data-close data-i18n="cancel">إلغاء</button>
+          <button class="primary-button" value="default" data-i18n="save">حفظ</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="userDialog">
+      <form method="dialog" class="dialog-form" id="userForm">
+        <h3 data-i18n="newUser">مستخدم جديد</h3>
+        <input type="hidden" id="userId" />
+        <div class="form-grid compact">
+          <label><span data-i18n="username">اسم المستخدم</span><input id="userUsername" required maxlength="40" /></label>
+          <label><span data-i18n="password">كلمة المرور</span><input id="userPassword" type="password" required maxlength="40" /></label>
+          <label><span data-i18n="nameAr">الاسم</span><input id="userDisplayName" maxlength="80" /></label>
+          <label><span data-i18n="role">الصلاحية</span><select id="userRole"></select></label>
+        </div>
+        <div class="dialog-actions">
+          <button class="ghost-button" value="cancel" type="button" data-close data-i18n="cancel">إلغاء</button>
+          <button class="primary-button" value="default" data-i18n="save">حفظ</button>
+        </div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="assets/legacy-access-data.js"></script>
+    <script src="assets/inventory-catalog.js"></script>
+    <script src="config.js"></script>
+    <script src="github-storage.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
